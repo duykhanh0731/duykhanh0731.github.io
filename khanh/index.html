@@ -1,405 +1,413 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<HTML>
-
-<HEAD>
-  <TITLE> Heart </TITLE>
-  <META NAME="Generator" CONTENT="EditPlus">
-  <META NAME="Author" CONTENT="">
-  <META NAME="Keywords" CONTENT="">
-  <META NAME="Description" CONTENT="">
-
-  <style>
-    html,
-    body {
-      height: 100%;
-      padding: 0;
-      margin: 0;
-      background: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-    }
-
-    .box {
-      width: 100%;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      display: flex;
-      flex-direction: column;
-      z-index: 2; /* Để trái tim chính nằm trên nền */
-    }
-
-    canvas {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-    }
-
-    #pinkboard {
-      position: relative;
-      margin: auto;
-      height: 500px;
-      width: 500px;
-      animation: animate 1.3s infinite;
-    }
-
-    #pinkboard:before,
-    #pinkboard:after {
-      content: '';
-      position: absolute;
-      background: #FF5CA4;
-      width: 100px;
-      height: 160px;
-      border-top-left-radius: 50px;
-      border-top-right-radius: 50px;
-    }
-
-    #pinkboard:before {
-      left: 100px;
-      transform: rotate(-45deg);
-      transform-origin: 0 100%;
-      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25),
-        0 10px 10px rgba(0, 0, 0, 0.22);
-    }
-
-    #pinkboard:after {
-      left: 0;
-      transform: rotate(45deg);
-      transform-origin: 100% 100%;
-    }
-
-    @keyframes animate {
-      0% {
-        transform: scale(1);
-      }
-
-      30% {
-        transform: scale(.8);
-      }
-
-      60% {
-        transform: scale(1.2);
-      }
-
-      100% {
-        transform: scale(1);
-      }
-    }
-
-    /* Canvas dành riêng cho hiệu ứng trái tim nền */
-    #bgCanvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-      pointer-events: none;
-    }
-  </style>
-</HEAD>
-
-<BODY>
-  <!-- Canvas nền trái tim nhỏ -->
-  <canvas id="bgCanvas"></canvas>
-
-  <div class="box">
-    <canvas id="pinkboard"></canvas>
-  </div>
-
-  <script>
-    /*
-     * 1. HIỆU ỨNG TRÁI TIM NHỎ TRONG NỀN (BACKGROUND HEARTS)
-     */
-    (function () {
-      var bgCanvas = document.getElementById('bgCanvas');
-      var bgCtx = bgCanvas.getContext('2d');
-      var bgHearts = [];
-      var heartCount = 60; // Số lượng trái tim nhỏ trên nền
-
-      function resizeBgCanvas() {
-        bgCanvas.width = window.innerWidth;
-        bgCanvas.height = window.innerHeight;
-      }
-      window.addEventListener('resize', resizeBgCanvas);
-      resizeBgCanvas();
-
-      function BgHeart() {
-        this.reset();
-      }
-
-      BgHeart.prototype.reset = function () {
-        this.x = Math.random() * bgCanvas.width;
-        this.y = bgCanvas.height + Math.random() * 100;
-        this.size = Math.random() * 8 + 4; // Kích thước ngẫu nhiên (4px - 12px)
-        this.speedY = Math.random() * 1.5 + 0.5; // Tốc độ bay lên
-        this.speedX = (Math.random() - 0.5) * 0.8; // Tốc độ lắc ngang
-        this.opacity = Math.random() * 0.5 + 0.2; // Độ trong suốt
-        this.fade = Math.random() * 0.005 + 0.002;
-      };
-
-      BgHeart.prototype.update = function () {
-        this.y -= this.speedY;
-        this.x += this.speedX;
-        this.opacity -= this.fade;
-
-        if (this.y < -20 || this.opacity <= 0) {
-          this.reset();
-        }
-      };
-
-      BgHeart.prototype.draw = function () {
-        bgCtx.save();
-        bgCtx.translate(this.x, this.y);
-        bgCtx.globalAlpha = this.opacity;
-        bgCtx.fillStyle = '#ff85b3';
-
-        // Vẽ trái tim nhỏ bằng đường cong bezier
-        bgCtx.beginPath();
-        var topCurveHeight = this.size * 0.3;
-        bgCtx.moveTo(0, topCurveHeight);
-        bgCtx.bezierCurveTo(
-          0, 0, 
-          -this.size / 2, 0, 
-          -this.size / 2, topCurveHeight
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Rose for You</title>
+<style>
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #080306;
+}
+body {
+    background: 
+        radial-gradient(circle at 50% 35%, 
+            #3b1424 0%, 
+            #170711 50%, 
+            #050204 100%
         );
-        bgCtx.bezierCurveTo(
-          -this.size / 2, (this.size + topCurveHeight) / 2, 
-          0, this.size, 
-          0, this.size
-        );
-        bgCtx.bezierCurveTo(
-          0, this.size, 
-          this.size / 2, (this.size + topCurveHeight) / 2, 
-          this.size / 2, topCurveHeight
-        );
-        bgCtx.bezierCurveTo(
-          this.size / 2, 0, 
-          0, 0, 
-          0, topCurveHeight
-        );
-        bgCtx.closePath();
-        bgCtx.fill();
-        bgCtx.restore();
-      };
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Georgia, serif;
+    color: white;
+}
+/* ÁNH SÁNG NỀN TỎA RA */
+.glow {
+    position: fixed;
+    width: min(85vw, 700px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle,
+        rgba(255, 45, 105, 0.22) 0%,
+        rgba(190, 15, 65, 0.08) 45%,
+        transparent 75%
+    );
+    animation: glowPulse 5s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+/* KHU VỰC HOA HỒNG */
+.rose-scene {
+    width: min(92vw, 480px);
+    height: min(90vh, 620px);
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: roseAppear 2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.rose-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    filter: drop-shadow(0 0 25px rgba(255, 30, 95, 0.35));
+}
+.rose-head {
+    transform-origin: 220px 225px;
+    animation: roseBloom 4s ease-in-out infinite;
+}
+.petal-detail {
+    fill: none;
+    stroke: rgba(255, 205, 215, 0.6);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+}
+.rose-leaves {
+    transform-origin: 220px 390px;
+    animation: leafSway 6s ease-in-out infinite;
+}
+/* HẠT SÁNG NỀN (BOKEH) */
+.sparkle {
+    position: fixed;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #ffecf2;
+    box-shadow: 0 0 12px 4px rgba(255, 90, 140, 0.7);
+    pointer-events: none;
+    animation: sparkle 3.5s ease-in-out infinite;
+    z-index: 2;
+}
+/* CANVAS CÁNH HOA RƠI */
+#petals {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 4;
+}
+/* DÒNG CHỮ THÔNG ĐIỆP */
+.caption {
+    position: fixed;
+    z-index: 5;
+    bottom: max(32px, 6vh);
+    left: 0;
+    width: 100%;
+    text-align: center;
+    padding: 0 16px;
+    animation: textAppear 2.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: 0.5s;
+}
+.caption h1 {
+    font-size: clamp(24px, 5vw, 36px);
+    font-weight: normal;
+    font-style: italic;
+    letter-spacing: 4px;
+    color: #fff0f3;
+    text-shadow: 0 0 20px rgba(255, 75, 125, 0.85);
+}
+.caption p {
+    margin-top: 10px;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: rgba(255, 210, 222, 0.75);
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+/* HIỆU ỨNG ANIMATION */
+@keyframes roseBloom {
+    0%, 100% {
+        transform: scale(0.97) rotate(-1deg);
+    }
+    50% {
+        transform: scale(1.04) rotate(1.5deg);
+    }
+}
+@keyframes leafSway {
+    0%, 100% {
+        transform: rotate(-1.5deg);
+    }
+    50% {
+        transform: rotate(2.5deg);
+    }
+}
+@keyframes glowPulse {
+    0%, 100% {
+        opacity: 0.5;
+        transform: scale(0.9);
+    }
+    50% {
+        opacity: 0.95;
+        transform: scale(1.1);
+    }
+}
+@keyframes sparkle {
+    0%, 100% {
+        opacity: 0.1;
+        transform: scale(0.5);
+    }
+    50% {
+        opacity: 0.9;
+        transform: scale(1.4);
+    }
+}
+@keyframes roseAppear {
+    from {
+        opacity: 0;
+        transform: translateY(35px) scale(0.7);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+@keyframes textAppear {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+@media (max-width: 480px) {
+    .rose-scene {
+        width: 100vw;
+        height: 75vh;
+    }
+    .caption h1 {
+        letter-spacing: 2px;
+    }
+    .caption p {
+        letter-spacing: 4px;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<!-- HOA HỒNG VECTOR -->
+<div class="rose-scene">
+<svg class="rose-svg" viewBox="0 0 440 560" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <radialGradient id="petalRed" cx="38%" cy="25%" r="80%">
+            <stop offset="0%" stop-color="#ff9aab"/>
+            <stop offset="30%" stop-color="#fa456d"/>
+            <stop offset="70%" stop-color="#cb073d"/>
+            <stop offset="100%" stop-color="#68051f"/>
+        </radialGradient>
+        <linearGradient id="petalDark" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ff6b8c"/>
+            <stop offset="45%" stop-color="#d91049"/>
+            <stop offset="100%" stop-color="#740522"/>
+        </linearGradient>
+        <linearGradient id="petalLight" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffbecb"/>
+            <stop offset="45%" stop-color="#ff557b"/>
+            <stop offset="100%" stop-color="#c30a40"/>
+        </linearGradient>
+        <linearGradient id="stemGreen" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#153d25"/>
+            <stop offset="45%" stop-color="#51a354"/>
+            <stop offset="100%" stop-color="#17381f"/>
+        </linearGradient>
+        <linearGradient id="leafGreen" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#a0d77b"/>
+            <stop offset="40%" stop-color="#398347"/>
+            <stop offset="100%" stop-color="#123b23"/>
+        </linearGradient>
+        <radialGradient id="centerRed">
+            <stop offset="0%" stop-color="#ffb0bc"/>
+            <stop offset="35%" stop-color="#ff416a"/>
+            <stop offset="100%" stop-color="#8b082b"/>
+        </radialGradient>
+    </defs>
+    <!-- THÂN CÂY -->
+    <g>
+        <path d="M217 290 C224 350 205 410 221 515" fill="none" stroke="#071e12" stroke-width="17" stroke-linecap="round"/>
+        <path d="M217 290 C224 350 205 410 221 515" fill="none" stroke="url(#stemGreen)" stroke-width="10" stroke-linecap="round"/>
+        <path d="M219 330 C220 380 213 430 223 490" fill="none" stroke="#94c66b" stroke-width="1.5" opacity=".7"/>
+    </g>
+    <!-- LÁ HOA -->
+    <g class="rose-leaves">
+        <path d="M218 381 C174 333 120 332 105 356 C120 402 176 420 218 381Z" fill="url(#leafGreen)" stroke="#8dbd70" stroke-width="1.4"/>
+        <path d="M110 358 C148 368 183 380 216 383" fill="none" stroke="#a2d583" stroke-width="2"/>
+        <path d="M157 373 L151 353 M177 379 L178 361 M139 367 L132 384" fill="none" stroke="#8cc66d" stroke-width="1.4"/>
+        <path d="M218 436 C248 386 305 382 326 403 C311 450 262 468 218 436Z" fill="url(#leafGreen)" stroke="#8dbd70" stroke-width="1.4"/>
+        <path d="M222 437 C258 426 290 413 321 405" fill="none" stroke="#a2d583" stroke-width="2"/>
+        <path d="M258 425 L257 405 M277 418 L291 430 M240 431 L239 449" fill="none" stroke="#8cc66d" stroke-width="1.4"/>
+        <!-- LÁ NHỎ -->
+        <path d="M218 340 C188 306 155 315 150 333 C172 355 199 356 218 340Z" fill="url(#leafGreen)" stroke="#8dbd70" stroke-width="1"/>
+        <path d="M216 340 L157 329" stroke="#a2d583" stroke-width="1.5"/>
+    </g>
+    <!-- ĐÀI HOA -->
+    <g fill="#246c39" stroke="#43894b" stroke-width="1.5">
+        <path d="M219 261 C196 280 173 270 164 246 C189 254 202 253 219 261Z"/>
+        <path d="M221 261 C244 280 267 270 276 246 C251 254 238 253 221 261Z"/>
+        <path d="M219 259 C211 282 218 297 229 303 C231 282 228 269 219 259Z"/>
+        <path d="M215 262 C184 270 181 292 189 301 C207 286 214 276 215 262Z"/>
+        <path d="M225 262 C256 270 259 292 251 301 C233 286 226 276 225 262Z"/>
+    </g>
+    <!-- HIỆU ỨNG HOA NỞ -->
+    <g class="rose-head">
+        <!-- CÁNH NGOÀI -->
+        <path d="M218 254 C176 271 125 244 115 207 C105 170 131 137 160 149 C139 108 176 75 205 102 C225 121 226 146 220 169 C239 118 281 108 303 144 C322 176 295 211 267 225 C302 217 325 247 298 267 C277 284 240 273 218 254Z" fill="url(#petalDark)" stroke="#ff718e" stroke-width="1.5"/>
+        <!-- CÁNH TRÁI -->
+        <path d="M214 252 C179 252 140 232 138 201 C135 177 156 159 176 177 C164 151 183 133 201 149 C218 162 222 191 214 252Z" fill="url(#petalRed)" stroke="#ff8198" stroke-width="1.3"/>
+        <!-- CÁNH PHẢI -->
+        <path d="M217 250 C250 244 282 221 280 194 C278 170 254 157 239 178 C250 149 229 131 211 151 C195 171 206 206 217 250Z" fill="url(#petalLight)" stroke="#ff91a8" stroke-width="1.3"/>
+        <!-- CÁNH GIỮA PHÍA SAU -->
+        <path d="M191 222 C156 196 171 154 196 154 C214 154 226 180 220 203 C235 168 272 168 280 195 C288 221 260 241 230 252Z" fill="url(#petalRed)" stroke="#ff8198" stroke-width="1.4"/>
+        <!-- CÁNH CUỘN PHÍA TRƯỚC -->
+        <path d="M217 246 C188 236 171 217 180 193 C187 176 205 177 216 194 C219 170 245 168 257 187 C272 211 249 240 217 246Z" fill="url(#petalLight)" stroke="#ffadbd" stroke-width="1.4"/>
+        <!-- CÁNH TRONG -->
+        <path d="M218 235 C198 226 194 204 208 195 C216 189 224 195 225 207 C232 192 248 200 247 214 C246 229 232 238 218 235Z" fill="url(#centerRed)" stroke="#ffb0bd" stroke-width="1.3"/>
+        <!-- NẾP CÁNH HOA -->
+        <path class="petal-detail" d="M143 184 C148 213 172 233 196 240"/>
+        <path class="petal-detail" d="M165 158 C183 171 190 191 189 207"/>
+        <path class="petal-detail" d="M267 159 C268 181 254 200 240 208"/>
+        <path class="petal-detail" d="M281 224 C264 239 250 247 237 250"/>
+        <path class="petal-detail" d="M201 208 C213 214 213 225 210 230"/>
+        <!-- NHỤY CUỘN -->
+        <path d="M217 222 C201 214 206 201 218 202 C230 201 233 215 224 221 C215 227 207 220 213 214 C218 211 222 216 218 219" fill="none" stroke="#ffced7" stroke-width="3" stroke-linecap="round"/>
+        <path d="M216 224 C206 215 209 206 218 206" fill="none" stroke="#fff0f2" stroke-width="1" stroke-linecap="round"/>
 
-      for (var i = 0; i < heartCount; i++) {
-        var h = new BgHeart();
-        h.y = Math.random() * bgCanvas.height; // Phân bố ngẫu nhiên lúc ban đầu
-        bgHearts.push(h);
-      }
+        <!-- ĐIỂM SÁNG CÁNH HOA -->
+        <g fill="#fff0f4" opacity=".9">
+            <circle cx="161" cy="177" r="2"/>
+            <circle cx="172" cy="190" r="1.4"/>
+            <circle cx="264" cy="181" r="2"/>
+            <circle cx="251" cy="199" r="1.5"/>
+            <circle cx="200" cy="162" r="1.5"/>
+        </g>
+    </g>
+    <!-- HẠT SÁNG QUANH HOA -->
+    <g fill="#ffd3df">
+        <circle cx="103" cy="197" r="2"/>
+        <circle cx="324" cy="177" r="2"/>
+        <circle cx="302" cy="294" r="1.8"/>
+        <circle cx="127" cy="287" r="1.6"/>
+        <circle cx="282" cy="117" r="1.5"/>
+    </g>
+</svg>
+</div>
+<!-- CÁNH HOA BAY TRÊN NỀN -->
+<canvas id="petals"></canvas>
+<script>
+(function () {
+    const canvas = document.getElementById("petals");
+    const ctx = canvas.getContext("2d");
 
-      function animateBg() {
-        bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
-        for (var i = 0; i < bgHearts.length; i++) {
-          bgHearts[i].update();
-          bgHearts[i].draw();
+    let width = 0;
+    let height = 0;
+    let petals = [];
+
+    const isMobile = window.innerWidth < 600;
+    const PETAL_COUNT = isMobile ? 22 : 40;
+
+    function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    function createPetal(randomY = false) {
+        return {
+            x: Math.random() * width,
+            y: randomY ? Math.random() * height : height + 30,
+            size: 5 + Math.random() * 8,
+            speedY: 0.4 + Math.random() * 0.8,
+            speedX: (Math.random() - 0.5) * 1.2,
+            rotation: Math.random() * Math.PI * 2,
+            spin: (Math.random() - 0.5) * 0.03,
+            alpha: 0.4 + Math.random() * 0.5,
+            sway: Math.random() * 0.015
+        };
+    }
+    function drawPetal(p) {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        ctx.globalAlpha = p.alpha;
+
+        const gradient = ctx.createLinearGradient(-p.size, -p.size, p.size, p.size);
+        gradient.addColorStop(0, "#ffe3ec");
+        gradient.addColorStop(0.45, "#ff4b7d");
+        gradient.addColorStop(1, "#9e0535");
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.moveTo(0, -p.size);
+        ctx.bezierCurveTo(p.size * 1.6, -p.size * 0.7, p.size * 1.4, p.size * 0.9, 0, p.size);
+        ctx.bezierCurveTo(-p.size * 1.4, p.size * 0.9, -p.size * 1.6, -p.size * 0.7, 0, -p.size);
+        ctx.fill();
+
+        ctx.restore();
+    }
+    function init() {
+        resize();
+        petals = [];
+        for (let i = 0; i < PETAL_COUNT; i++) {
+            petals.push(createPetal(true));
         }
-        requestAnimationFrame(animateBg);
-      }
-      animateBg();
-    })();
+        requestAnimationFrame(animate);
+    }
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+        for (const p of petals) {
+            p.y -= p.speedY;
+            p.x += p.speedX + Math.sin(p.y * p.sway) * 0.4;
+            p.rotation += p.spin;
 
-    /*
-     * 2. CODE HIỆU ỨNG TRÁI TIM CHÍNH (GỐC)
-     */
-    var settings = {
-      particles: {
-        length: 2000,
-        duration: 2,
-        velocity: 100,
-        effect: -1.3,
-        size: 13,
-      },
-    };
-
-    (function () { var b = 0; var c = ["ms", "moz", "webkit", "o"]; for (var a = 0; a < c.length && !window.requestAnimationFrame; ++a) { window.requestAnimationFrame = window[c[a] + "RequestAnimationFrame"]; window.cancelAnimationFrame = window[c[a] + "CancelAnimationFrame"] || window[c[a] + "CancelRequestAnimationFrame"] } if (!window.requestAnimationFrame) { window.requestAnimationFrame = function (h, e) { var d = new Date().getTime(); var f = Math.max(0, 16 - (d - b)); var g = window.setTimeout(function () { h(d + f) }, f); b = d + f; return g } } if (!window.cancelAnimationFrame) { window.cancelAnimationFrame = function (d) { clearTimeout(d) } } }());
-
-    var Point = (function () {
-      function Point(x, y) {
-        this.x = (typeof x !== 'undefined') ? x : 0;
-        this.y = (typeof y !== 'undefined') ? y : 0;
-      }
-      Point.prototype.clone = function () {
-        return new Point(this.x, this.y);
-      };
-      Point.prototype.length = function (length) {
-        if (typeof length == 'undefined')
-          return Math.sqrt(this.x * this.x + this.y * this.y);
-        this.normalize();
-        this.x *= length;
-        this.y *= length;
-        return this;
-      };
-      Point.prototype.normalize = function () {
-        var length = this.length();
-        this.x /= length;
-        this.y /= length;
-        return this;
-      };
-      return Point;
-    })();
-
-    var Particle = (function () {
-      function Particle() {
-        this.position = new Point();
-        this.velocity = new Point();
-        this.acceleration = new Point();
-        this.age = 0;
-      }
-      Particle.prototype.initialize = function (x, y, dx, dy) {
-        this.position.x = x;
-        this.position.y = y;
-        this.velocity.x = dx;
-        this.velocity.y = dy;
-        this.acceleration.x = dx * settings.particles.effect;
-        this.acceleration.y = dy * settings.particles.effect;
-        this.age = 0;
-      };
-      Particle.prototype.update = function (deltaTime) {
-        this.position.x += this.velocity.x * deltaTime;
-        this.position.y += this.velocity.y * deltaTime;
-        this.velocity.x += this.acceleration.x * deltaTime;
-        this.velocity.y += this.acceleration.y * deltaTime;
-        this.age += deltaTime;
-      };
-      Particle.prototype.draw = function (context, image) {
-        function ease(t) {
-          return (--t) * t * t + 1;
+            if (p.y < -40 || p.x < -50 || p.x > width + 50) {
+                Object.assign(p, createPetal(false));
+            }
+            drawPetal(p);
         }
-        var size = image.width * ease(this.age / settings.particles.duration);
-        context.globalAlpha = 1 - this.age / settings.particles.duration;
-        context.drawImage(image, this.position.x - size / 2, this.position.y - size / 2, size, size);
-      };
-      return Particle;
-    })();
-
-    var ParticlePool = (function () {
-      var particles,
-        firstActive = 0,
-        firstFree = 0,
-        duration = settings.particles.duration;
-
-      function ParticlePool(length) {
-        particles = new Array(length);
-        for (var i = 0; i < particles.length; i++)
-          particles[i] = new Particle();
-      }
-      ParticlePool.prototype.add = function (x, y, dx, dy) {
-        particles[firstFree].initialize(x, y, dx, dy);
-        firstFree++;
-        if (firstFree == particles.length) firstFree = 0;
-        if (firstActive == firstFree) firstActive++;
-        if (firstActive == particles.length) firstActive = 0;
-      };
-      ParticlePool.prototype.update = function (deltaTime) {
-        var i;
-        if (firstActive < firstFree) {
-          for (i = firstActive; i < firstFree; i++)
-            particles[i].update(deltaTime);
-        }
-        if (firstFree < firstActive) {
-          for (i = firstActive; i < particles.length; i++)
-            particles[i].update(deltaTime);
-          for (i = 0; i < firstFree; i++)
-            particles[i].update(deltaTime);
-        }
-        while (particles[firstActive].age >= duration && firstActive != firstFree) {
-          firstActive++;
-          if (firstActive == particles.length) firstActive = 0;
-        }
-      };
-      ParticlePool.prototype.draw = function (context, image) {
-        if (firstActive < firstFree) {
-          for (i = firstActive; i < firstFree; i++)
-            particles[i].draw(context, image);
-        }
-        if (firstFree < firstActive) {
-          for (i = firstActive; i < particles.length; i++)
-            particles[i].draw(context, image);
-          for (i = 0; i < firstFree; i++)
-            particles[i].draw(context, image);
-        }
-      };
-      return ParticlePool;
-    })();
-
-    (function (canvas) {
-      var context = canvas.getContext('2d'),
-        particles = new ParticlePool(settings.particles.length),
-        particleRate = settings.particles.length / settings.particles.duration,
-        time;
-
-      function pointOnHeart(t) {
-        return new Point(
-          160 * Math.pow(Math.sin(t), 3),
-          130 * Math.cos(t) - 50 * Math.cos(2 * t) - 20 * Math.cos(3 * t) - 10 * Math.cos(4 * t) + 25
-        );
-      }
-
-      var image = (function () {
-        var canvas = document.createElement('canvas'),
-          context = canvas.getContext('2d');
-        canvas.width = settings.particles.size;
-        canvas.height = settings.particles.size;
-
-        function to(t) {
-          var point = pointOnHeart(t);
-          point.x = settings.particles.size / 2 + point.x * settings.particles.size / 350;
-          point.y = settings.particles.size / 2 - point.y * settings.particles.size / 350;
-          return point;
-        }
-        context.beginPath();
-        var t = -Math.PI;
-        var point = to(t);
-        context.moveTo(point.x, point.y);
-        while (t < Math.PI) {
-          t += 0.01;
-          point = to(t);
-          context.lineTo(point.x, point.y);
-        }
-        context.closePath();
-        context.fillStyle = '#FF5CA4';
-        context.fill();
-        var image = new Image();
-        image.src = canvas.toDataURL();
-        return image;
-      })();
-
-      function render() {
-        requestAnimationFrame(render);
-        var newTime = new Date().getTime() / 1000,
-          deltaTime = newTime - (time || newTime);
-        time = newTime;
-
-        context.clearRect(0, 0, canvas.width, canvas.height);
-
-        var amount = particleRate * deltaTime;
-        for (var i = 0; i < amount; i++) {
-          var pos = pointOnHeart(Math.PI - 2 * Math.PI * Math.random());
-          var dir = pos.clone().length(settings.particles.velocity);
-          particles.add(canvas.width / 2 + pos.x, canvas.height / 2 - pos.y, dir.x, -dir.y);
-        }
-
-        particles.update(deltaTime);
-        particles.draw(context, image);
-      }
-
-      function onResize() {
-        canvas.width = canvas.clientWidth;
-        canvas.height = canvas.clientHeight;
-      }
-      window.onresize = onResize;
-
-      setTimeout(function () {
-        onResize();
-        render();
-      }, 10);
-    })(document.getElementById('pinkboard'));
-  </script>
-</BODY>
-
-</HTML>
+        requestAnimationFrame(animate);
+    }
+    window.addEventListener("resize", resize);
+    init();
+})();
+/* TẠO CÁC ĐIỂM SÁNG LẤP LÁNH NỀN */
+(function () {
+    const total = window.innerWidth < 600 ? 16 : 28;
+    for (let i = 0; i < total; i++) {
+        const dot = document.createElement("span");
+        dot.className = "sparkle";
+        dot.style.left = Math.random() * 100 + "%";
+        dot.style.top = Math.random() * 100 + "%";
+        dot.style.animationDelay = Math.random() * 4 + "s";
+        dot.style.animationDuration = (2.5 + Math.random() * 3.5) + "s";
+        dot.style.transform = "scale(" + (0.4 + Math.random() * 0.8) + ")";
+        document.body.appendChild(dot);
+    }
+})();
+</script>
+</body>
+</html>
